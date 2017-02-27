@@ -20,14 +20,14 @@ style_map: {
 
 gantt: true,
 gantt_scale: "hours",
-filters: [
+/*filters: [
 		{
 			"fieldtype": "Link",
 			"fieldname": "conference",
 			"options": "Conference",
 			"label": __("Conference")
 		},
-	],
+	],*/
 get_events_method: "conference_management.api.get_conference"
 
 }

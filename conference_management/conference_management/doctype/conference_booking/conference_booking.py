@@ -188,8 +188,8 @@ def get_events_grid(start, end,filters=None):
 	filters=json.loads(filters)
 	query = """select name, conference, conference as resource, timestamp(date, from_time) as start_date,
 	timestamp(date, to_time) as end_date, workflow_state, 0 as all_day
-	from `tabConference booking` where  %(conference_condition)s workflow_state='Booked' """ %{
-		"conference_condition": " conference= '"+filters['conference']+"' and " if filters['conference'] else ""
+	from `tabConference booking` where workflow_state='Booked' """ %{
+		# "conference_condition": " conference= '"+filters['conference']+"' and " if filters['conference'] else ""
 	}
 
 	conferences = frappe.db.sql(query,as_dict=True)
@@ -197,8 +197,8 @@ def get_events_grid(start, end,filters=None):
 	# frappe.errprint(conferences)
 
 
-	conference_name=frappe.db.sql("""select  name as id, name from `tabConference`where %(conference_condition)s"""%{
-		"conference_condition": " conference_name= '"+filters['conference']+"' " if filters['conference'] else "1=1"
+	conference_name=frappe.db.sql("""select  name as id, name from `tabConference` """%{
+		# "conference_condition": " conference_name= '"+filters['conference']+"' " if filters['conference'] else "1=1"
 		}, as_dict=1)
 	# frappe.errprint(conference_name)
 
