@@ -38,6 +38,14 @@ frappe.ui.form.on('Conference booking', {
 		cur_frm.set_df_property("pantry_service","read_only",cur_frm.doc.__islocal ? 0: 1);
 
 	},
+	calender_view: function(frm) {
+		var url,data;
+		data=window.location.origin;
+		console.log(data);
+		url=data + "/desk#Calendar/Conference booking";
+		console.log(url);		
+		window.open(url,"_self");
+	},
  	
 	date:function(frm){
     		if (frm.doc.date < get_today()) 
