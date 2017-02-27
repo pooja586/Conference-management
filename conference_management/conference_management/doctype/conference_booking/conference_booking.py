@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from conference_management.api import send_invitation_emails
+from conference_management.api import send_confirmation_emails
 
 class Conferencebooking(Document):
 	
@@ -27,6 +28,7 @@ class Conferencebooking(Document):
 					if self.email_sent!=1:
 						self.email_sent==send_invitation(self.name,self.agenda,self.from_time,self.to_time,self.date,self.attendees)
 		
+		send_confirmation_to_creater(self.name,self.agenda,self.from_time,self.to_time,self.date,self.email)
 
 		#For Helpdesk pantry_service ticket 
 		if self.workflow_state=="Booked":
@@ -37,7 +39,10 @@ class Conferencebooking(Document):
 				frappe.msgprint("You cannot select past date")
 		if self.availability=="Not Available":
 			frappe.throw("You cannot apply for this conference, please check availability")
-		#self.save()
+
+		# var validate_flag=1;
+		# if not self.check_availability.
+		
 				
 			# if self.from_time > self.to_time:
 			# 	frappe.msgprint("From Time Must Be Smaller Than To Time")
@@ -47,7 +52,7 @@ class Conferencebooking(Document):
 				
 @frappe.whitelist()
 def send_invitation(Name,Agenda,from_time,to_time,date,attendees):
-	Venue="From Time :"+str(from_time)+" "+"To Time :"+str(to_time)+"\n"+"On Date :"+str(date)
+	Venue="Date :"+str(date)+" "+"From Time :"+str(from_time)+" "+"To Time :"+str(to_time)+"\n"
 	Attendees=attendees
 	Attendees=Attendees+str("#")
 	temp_email=" "
@@ -62,6 +67,13 @@ def send_invitation(Name,Agenda,from_time,to_time,date,attendees):
 			temp_email=temp_email+str(Attendees[i])
 
 	return flg
+
+@frappe.whitelist()
+def send_confirmation_to_creater(Name,Agenda,from_time,to_time,date,email):
+	Venue="From Time :"+str(from_time)+" "+"To Time :"+str(to_time)+"\n"+"On Date :"+str(date)
+	print "\n\n\nvalues=",Name,Agenda,Venue,email
+	send_confirmation_emails(Name,Agenda,Venue,email)
+	print "_________________mail_____________"	
 
 # For creating Event and Sharing Event	
 @frappe.whitelist()
@@ -84,6 +96,7 @@ def create_conference_event(name,date,from_time,to_time,attendees):
 	for  i in range(0,len(Attendees)):
 		if Attendees[i]=="," or Attendees[i]=="#":
 			Attendee=temp_email;
+
 			#New Doc_share 
 			Docshare_doc=frappe.new_doc("DocShare")
 			UDoc=frappe.get_doc("User",Attendee)
@@ -133,8 +146,6 @@ def get_permission_query_conditions(user):
 	if not user=="Administrator":
 		return "`tabConference booking`.email = '{0}'".format(user);
 
-
-
 @frappe.whitelist()
 def conference_close():
 	Book_conf = frappe.get_all("Conference booking",filters={'workflow_state':"Booked"})
@@ -146,7 +157,7 @@ def conference_close():
 		conf_datetime1 = frappe.utils.data.get_datetime(conf_datetime)
 		current_datetime = frappe.utils.data.now_datetime()
 		diff=frappe.utils.data.date_diff(current_datetime,conf_datetime1)
-		if diff > 0:
+		if diff >= 0:
 			print "\n\n conf time greater than current time",Book_conf[i]['name']
 			close_conf=frappe.db.sql("""update `tabConference booking` set workflow_state='Closed' where name=%s""",(Book_conf[i]['name']))
 			print close_conf
@@ -163,6 +174,58 @@ def check_availability(date,from_time,to_time,conference):
 		print "\n\nNot Available"
 		print "check_conf",check_conf
 		return "Not Available"
+
+		# conff=frappe.get_all("Conference booking",filters=[['Conference booking','to_time','>',from_time],['Conference booking','date','=',date],['Conference booking','conference','=',conference]],debug=1)
+		# print "*&*& booked conferences",conff
+		# print "\n\nconference name",conference
+		# flag = 0;
+		# if not conff:
+		# 	flag = 1
+		# for i in range(0,len(conff)):
+		# 	conff_details = frappe.get_doc("Conference booking",conff[i]['name'])
+		# 	Conf_tt=frappe.utils.data.get_time(conff_details.to_time)
+		# 	ft = frappe.utils.data.get_time(from_time)
+		# 	print "\n",Conf_tt
+		# 	print "\n",ft
+		# 	print type(Conf_tt)
+		# 	print type(ft)
+		# 	c_dt= str(date)+" "+str(ft)
+		# 	current_datetime = frappe.utils.data.get_datetime(c_dt)
+		# 	conf_dt = str(conff_details.date)+" "+str(Conf_tt)
+		# 	conf_datetime = frappe.utils.data.get_datetime(conf_dt)
+		# 	diff=frappe.utils.data.time_diff_in_hours(current_datetime,conf_datetime)
+		# 	print "diff",diff
+		# 	print "type of diff",type(diff)
+			
+		# 	if diff < 0:
+		# 		print "diff in if=",diff
+		# 		print "\n\n name=",conff_details.name
+		# 		print "Not Available"
+		# 		flag = 0
+		# 	else:
+		# 		print "diff in else=",diff
+		# 		print "\n\n name=",conff_details.name
+		# 		print "Available"
+		# 		flag = 1
+
+		# if flag==1:
+		# 	print "---","Available"
+		# 	return "Available"
+		# else:
+		# 	print "---","Not Available"
+		# 	return "Not Available"
+
+
+
+
+	# check_conf=frappe.db.sql("""select `tabConference booking`.`name` from `tabConference booking` where `tabConference booking`.date =%s and `tabConference booking`.conference =%s and `tabConference booking`.from_time between %s and %s and `tabConference booking`.to_time between %s and %s""",(date,conference,from_time,to_time,from_time,to_time),as_dict=True,debug=1)
+	# if not check_conf:
+	# 	print "\n\nAvailable"
+	# 	return "Available"
+	# else:
+	# 	print "\n\nNot Available"
+	# 	print "check_conf",check_conf
+	# 	return "Not Available"
 
 @frappe.whitelist()
 def get_conference_details(conference_name):
